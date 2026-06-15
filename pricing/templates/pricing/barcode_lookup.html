@@ -3,13 +3,16 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="utf-8">
-    <title>{{ company_name }} — قارئ الأسعار</title>
+    <title>{{ company_name }} - قارئ الأسعار</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <!-- رمز الريال السعودي — يعمل على الجوال والكمبيوتر -->
     <link href="https://cdn.jsdelivr.net/npm/@abdulrysr/saudi-riyal-new-symbol-font/style.css" rel="stylesheet">
+
+    <script type="text/javascript" src="https://unpkg.com/@zxing/browser@0.2.0"></script>
+
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -27,27 +30,19 @@
             --page: #fdf6f9;
         }
 
-        /* ══ رمز الريال ══
-           - على الجوال/كمبيوتر: خط SaudiRiyalSymbol (&#xEA;)
-           - على شاشة Newland (UA قديم): نص "ريال" عبر CSS content
-        */
         .sar-sym {
-            font-family: 'SaudiRiyalSymbol', sans-serif;
+            font-family: 'SaudiRiyalSymbol', 'Cairo', sans-serif;
             font-weight: bold;
             color: var(--pink-dark);
             display: inline-block;
             line-height: 1;
         }
+
         .big-price .sar-sym { font-size: 0.5em; vertical-align: 0.2em; margin-left: 5px; }
-        .mval    .sar-sym { font-size: 0.78em; vertical-align: 0.08em; margin-left: 3px; }
+        .mval .sar-sym { font-size: 0.78em; vertical-align: 0.08em; margin-left: 3px; }
 
-        /* Fallback: إذا فشل الخط تظهر "ريال" نصاً عادياً */
-        @supports not (font-family: 'SaudiRiyalSymbol') {
-            .sar-sym { font-family: 'Cairo', sans-serif; font-size: 0.55em !important; letter-spacing: 0; }
-            .sar-sym::before { content: "ريال"; }
-        }
-
-        html, body {
+        html,
+        body {
             height: 100%;
             font-family: 'Cairo', Tahoma, Arial, sans-serif;
             background: var(--page);
@@ -56,161 +51,618 @@
             -webkit-text-size-adjust: 100%;
         }
 
-        /* ════ TOPBAR ════ */
         .topbar {
-            display: flex; align-items: center; justify-content: space-between;
-            background: #fff; border-bottom: 2px solid var(--pink-border);
-            padding: 10px 18px; gap: 10px;
-            box-shadow: 0 2px 12px rgba(232,53,122,.07);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fff;
+            border-bottom: 2px solid var(--pink-border);
+            padding: 10px 18px;
+            gap: 10px;
+            box-shadow: 0 2px 12px rgba(232, 53, 122, .07);
         }
+
         .brand-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
-        .brand-title { font-size: 19px; font-weight: 900; color: var(--pink-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .brand-title {
+            font-size: 19px;
+            font-weight: 900;
+            color: var(--pink-dark);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .brand-en { font-size: 11px; color: var(--muted); font-weight: 600; }
+
         .user-row { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
         .user-pill {
-            display: flex; align-items: center; gap: 6px;
-            background: var(--pink-50); border: 1px solid var(--pink-border);
-            border-radius: 999px; padding: 5px 13px 5px 6px;
-            font-size: 13px; font-weight: 700; color: var(--muted); white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--pink-50);
+            border: 1px solid var(--pink-border);
+            border-radius: 999px;
+            padding: 5px 13px 5px 6px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--muted);
+            white-space: nowrap;
         }
+
         .ava {
-            width: 26px; height: 26px; border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
             background: linear-gradient(135deg, var(--pink-soft), var(--pink-dark));
-            display: flex; align-items: center; justify-content: center;
-            color: #fff; font-size: 11px; font-weight: 900; flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 900;
+            flex-shrink: 0;
         }
+
         .logout-form { margin: 0; }
+
         .out-btn {
-            height: 36px; padding: 0 15px;
-            border: 1.5px solid var(--pink-border); border-radius: 8px;
-            background: #fff; color: var(--pink-dark);
-            font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer;
+            height: 36px;
+            padding: 0 15px;
+            border: 1.5px solid var(--pink-border);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--pink-dark);
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
             transition: background .14s;
         }
+
         .out-btn:hover { background: var(--pink-50); }
 
-        /* ════ LAYOUT ════ */
-        .main-wrap { display: flex; flex-direction: column; height: calc(100vh - 58px); overflow: hidden; }
+        .main-wrap {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 58px);
+            overflow: hidden;
+        }
 
-        /* ════ SEARCH BAR ════ */
         .search-bar {
-            background: #fff; border-bottom: 2px solid var(--pink-border);
-            padding: 13px 18px; flex-shrink: 0;
+            background: #fff;
+            border-bottom: 2px solid var(--pink-border);
+            padding: 13px 18px;
+            flex-shrink: 0;
         }
-        .s-hint { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 9px; display: flex; align-items: center; gap: 6px; }
+
+        .s-hint {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--muted);
+            margin-bottom: 9px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
         .s-hint svg { width: 14px; height: 14px; opacity: .5; }
+
         .s-row { display: flex; gap: 10px; align-items: center; }
+
         .inp-wrap { flex: 1; position: relative; }
-        .bc-ico { position: absolute; top: 50%; transform: translateY(-50%); right: 15px; pointer-events: none; color: var(--pink-soft); }
-        .bc-ico svg { width: 20px; height: 20px; }
-        .bc-input {
-            width: 100%; height: 56px;
-            background: var(--pink-50); border: 2px solid var(--pink-border);
-            border-radius: 14px; padding: 0 48px 0 16px;
-            color: var(--ink); font-family: 'Cairo', sans-serif;
-            font-size: 20px; font-weight: 800; direction: ltr; text-align: left;
-            -webkit-appearance: none; transition: border-color .18s, box-shadow .18s;
+
+        .bc-ico {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            right: 15px;
+            pointer-events: none;
+            color: var(--pink-soft);
         }
-        .bc-input:focus { outline: 0; border-color: var(--pink); background: #fff; box-shadow: 0 0 0 4px rgba(232,53,122,.12); }
-        .bc-input::placeholder { color: var(--sub); font-size: 14px; font-weight: 500; }
+
+        .bc-ico svg { width: 20px; height: 20px; }
+
+        .bc-input {
+            width: 100%;
+            height: 56px;
+            background: var(--pink-50);
+            border: 2px solid var(--pink-border);
+            border-radius: 14px;
+            padding: 0 48px 0 16px;
+            color: var(--ink);
+            font-family: 'Cairo', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            direction: ltr;
+            text-align: left;
+            -webkit-appearance: none;
+            transition: border-color .18s, box-shadow .18s;
+        }
+
+        .bc-input:focus {
+            outline: 0;
+            border-color: var(--pink);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(232, 53, 122, .12);
+        }
+
+        .bc-input::placeholder {
+            color: var(--sub);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .scan-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .s-btn,
+        .cam-btn {
+            height: 56px;
+            border-radius: 14px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 15px;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         .s-btn {
-            height: 56px; padding: 0 24px;
-            background: var(--pink); border: 0; border-radius: 14px; color: #fff;
-            font-family: 'Cairo', sans-serif; font-size: 16px; font-weight: 900;
-            cursor: pointer; display: flex; align-items: center; gap: 7px; flex-shrink: 0;
-            box-shadow: 0 4px 14px rgba(232,53,122,.35); -webkit-tap-highlight-color: transparent;
+            padding: 0 24px;
+            background: var(--pink);
+            border: 0;
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(232, 53, 122, .35);
             transition: background .14s, transform .14s;
         }
-        .s-btn:hover { background: var(--pink-dark); transform: translateY(-1px); }
-        .s-btn svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.2; }
-        .f-err { margin-top: 7px; background: #fff0f4; border: 1px solid #ffc8d9; color: #9a0030; border-radius: 8px; padding: 8px 12px; font-size: 12px; font-weight: 600; }
 
-        /* ════ CONTENT ════ */
-        .content { flex: 1; overflow-y: auto; padding: 16px 18px 24px; -webkit-overflow-scrolling: touch; }
+        .s-btn:hover {
+            background: var(--pink-dark);
+            transform: translateY(-1px);
+        }
 
-        .alert { background: #fff0f4; border: 1.5px solid #ffc8d9; color: #9a0030; border-radius: 10px; padding: 13px 16px; margin-bottom: 14px; display: flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 700; }
+        .cam-btn {
+            padding: 0 18px;
+            background: #fff;
+            border: 2px solid var(--pink-border);
+            color: var(--pink-dark);
+        }
+
+        .s-btn svg,
+        .cam-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.2;
+        }
+
+        .s-btn[disabled],
+        .cam-btn[disabled] {
+            opacity: .75;
+            cursor: wait;
+            transform: none;
+        }
+
+        .f-err {
+            margin-top: 7px;
+            background: #fff0f4;
+            border: 1px solid #ffc8d9;
+            color: #9a0030;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .lookup-loading[hidden] { display: none !important; }
+
+        .lookup-loading {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: rgba(253, 246, 249, .82);
+            backdrop-filter: blur(8px);
+            display: grid;
+            place-items: center;
+            padding: 20px;
+        }
+
+        .lookup-loading-card {
+            width: min(240px, 90vw);
+            background: #fff;
+            border: 2px solid var(--pink-border);
+            border-radius: 20px;
+            padding: 24px 20px;
+            text-align: center;
+            box-shadow: 0 18px 45px rgba(232, 53, 122, .18);
+        }
+
+        .lookup-spinner {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            border: 4px solid var(--pink-100);
+            border-top-color: var(--pink);
+            margin: 0 auto 14px;
+            animation: lookupSpin .8s linear infinite;
+        }
+
+        .lookup-loading-title {
+            font-size: 15px;
+            font-weight: 900;
+            color: var(--pink-dark);
+            margin-bottom: 3px;
+        }
+
+        .lookup-loading-sub {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--muted);
+        }
+
+        @keyframes lookupSpin {
+            to { transform: rotate(360deg); }
+        }
+
+        .camera-sheet[hidden] { display: none !important; }
+
+        .camera-sheet {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(28, 15, 22, .76);
+            display: grid;
+            place-items: center;
+            padding: 16px;
+        }
+
+        .camera-panel {
+            width: min(540px, 100%);
+            background: #fff;
+            border: 2px solid var(--pink-border);
+            border-radius: 22px;
+            padding: 14px;
+            box-shadow: 0 18px 60px rgba(28, 15, 22, .22);
+        }
+
+        .camera-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+            color: var(--ink);
+            font-size: 15px;
+            font-weight: 900;
+        }
+
+        .camera-close {
+            border: 0;
+            border-radius: 10px;
+            padding: 8px 14px;
+            background: var(--pink-100);
+            color: var(--pink-dark);
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .camera-frame {
+            position: relative;
+            overflow: hidden;
+            border-radius: 18px;
+            background: #111;
+            border: 1px solid var(--pink-border);
+        }
+
+        #cameraVideo {
+            display: block;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            object-fit: cover;
+            background: #111;
+        }
+
+        .camera-target {
+            position: absolute;
+            inset: 23% 10%;
+            border: 2px solid rgba(255, 255, 255, .88);
+            border-radius: 16px;
+            pointer-events: none;
+            box-shadow: 0 0 0 999px rgba(0, 0, 0, .18);
+        }
+
+        .camera-status {
+            margin-top: 10px;
+            color: var(--muted);
+            text-align: center;
+            font-size: 13px;
+            font-weight: 700;
+            min-height: 22px;
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 18px 24px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .alert {
+            background: #fff0f4;
+            border: 1.5px solid #ffc8d9;
+            color: #9a0030;
+            border-radius: 10px;
+            padding: 13px 16px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
         .alert svg { width: 16px; height: 16px; flex-shrink: 0; }
 
-        /* ════ RESULT STACK ════ */
-        .res-stack { display: flex; flex-direction: column; gap: 14px; }
+        .res-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
 
-        /* ─── PRICE CARD ─── */
+        .price-card,
+        .info-card {
+            background: #fff;
+            border-radius: 20px;
+        }
+
         .price-card {
-            background: #fff; border: 2px solid var(--pink-border);
-            border-radius: 20px; padding: 20px 22px;
-            box-shadow: 0 4px 20px rgba(232,53,122,.1);
-            position: relative; overflow: hidden;
+            border: 2px solid var(--pink-border);
+            padding: 20px 22px;
+            box-shadow: 0 4px 20px rgba(232, 53, 122, .1);
+            position: relative;
+            overflow: hidden;
         }
+
         .price-card::after {
-            content: ""; position: absolute; bottom: -28px; left: -28px;
-            width: 140px; height: 140px; border-radius: 50%;
-            background: var(--pink-100); opacity: .55; pointer-events: none;
+            content: "";
+            position: absolute;
+            bottom: -28px;
+            left: -28px;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: var(--pink-100);
+            opacity: .55;
+            pointer-events: none;
         }
+
         .pc-top { position: relative; z-index: 1; }
-        .pc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-        .pc-lbl { font-size: 13px; font-weight: 700; color: var(--muted); }
-        .vat-badge { background: var(--pink-100); border: 1px solid var(--pink-border); border-radius: 999px; padding: 4px 12px; font-size: 11px; font-weight: 900; color: var(--pink-dark); }
+
+        .pc-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .pc-lbl {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--muted);
+        }
+
+        .vat-badge {
+            background: var(--pink-100);
+            border: 1px solid var(--pink-border);
+            border-radius: 999px;
+            padding: 4px 12px;
+            font-size: 11px;
+            font-weight: 900;
+            color: var(--pink-dark);
+        }
 
         .big-price {
-            font-size: 78px;
             font-size: clamp(62px, 15vw, 96px);
             font-weight: 900;
             color: var(--pink-dark);
             line-height: 1;
-            letter-spacing: -2px;
             margin-bottom: 5px;
             direction: ltr;
             text-align: right;
         }
-        .pnote { font-size: 12px; color: var(--sub); text-align: right; margin-bottom: 14px; font-weight: 600; }
-        .pdiv { height: 1px; background: var(--border); margin: 0 0 14px; }
 
-        .pm { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; position: relative; z-index: 1; }
-        .met { background: var(--pink-50); border: 1px solid var(--pink-border); border-radius: 12px; padding: 13px; }
-        .mlbl { display: block; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 7px; }
-        .mval { font-size: clamp(17px, 4.5vw, 22px); font-weight: 900; color: var(--ink); direction: ltr; text-align: right; }
-        .pct-sym { font-size: .72em; color: var(--muted); font-weight: 700; }
-
-        /* ─── INFO CARD ─── */
-        .info-card {
-            background: #fff; border: 1.5px solid var(--border);
-            border-radius: 20px; padding: 20px 22px;
-            box-shadow: 0 2px 12px rgba(0,0,0,.04);
+        .pnote {
+            font-size: 12px;
+            color: var(--sub);
+            text-align: right;
+            margin-bottom: 14px;
+            font-weight: 600;
         }
-        .result-tag { display: inline-flex; align-items: center; gap: 5px; height: 27px; background: var(--pink-100); border: 1px solid var(--pink-border); border-radius: 999px; padding: 0 13px; color: var(--pink-dark); font-size: 12px; font-weight: 900; }
-        .result-tag svg { width: 12px; height: 12px; fill: var(--pink); }
-        .pname { margin: 11px 0 18px; font-size: clamp(19px, 5vw, 36px); font-weight: 900; line-height: 1.25; color: var(--ink); }
-        .dg { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .det { background: var(--pink-50); border: 1px solid var(--pink-border); border-radius: 12px; padding: 13px 15px; }
-        .dlbl { display: block; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 5px; }
-        .dval { display: block; font-size: clamp(14px, 3.5vw, 18px); font-weight: 800; color: var(--ink); overflow-wrap: anywhere; }
 
-        /* ─── IDLE ─── */
-        .idle { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 20px; text-align: center; }
-        .idle-icon { width: 72px; height: 72px; background: var(--pink-100); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 18px; }
-        .idle-icon svg { width: 36px; height: 36px; color: var(--pink-soft); fill: none; stroke: currentColor; stroke-width: 1.5; }
-        .idle-title { font-size: 18px; font-weight: 900; color: var(--muted); margin-bottom: 6px; }
-        .idle-sub { font-size: 13px; font-weight: 600; color: var(--sub); }
+        .pdiv {
+            height: 1px;
+            background: var(--border);
+            margin: 0 0 14px;
+        }
 
-        /* ════ RESPONSIVE ════ */
+        .pm {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .met,
+        .det {
+            background: var(--pink-50);
+            border: 1px solid var(--pink-border);
+            border-radius: 12px;
+            padding: 13px;
+        }
+
+        .mlbl,
+        .dlbl {
+            display: block;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 7px;
+        }
+
+        .mval {
+            font-size: clamp(17px, 4.5vw, 22px);
+            font-weight: 900;
+            color: var(--ink);
+            direction: ltr;
+            text-align: right;
+        }
+
+        .pct-sym {
+            font-size: .72em;
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        .info-card {
+            border: 1.5px solid var(--border);
+            padding: 20px 22px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, .04);
+        }
+
+        .result-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            height: 27px;
+            background: var(--pink-100);
+            border: 1px solid var(--pink-border);
+            border-radius: 999px;
+            padding: 0 13px;
+            color: var(--pink-dark);
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .result-tag svg {
+            width: 12px;
+            height: 12px;
+            fill: var(--pink);
+        }
+
+        .pname {
+            margin: 11px 0 18px;
+            font-size: clamp(19px, 5vw, 36px);
+            font-weight: 900;
+            line-height: 1.25;
+            color: var(--ink);
+        }
+
+        .dg {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .dval {
+            display: block;
+            font-size: clamp(14px, 3.5vw, 18px);
+            font-weight: 800;
+            color: var(--ink);
+            overflow-wrap: anywhere;
+        }
+
+        .idle {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 20px;
+            text-align: center;
+        }
+
+        .idle-icon {
+            width: 72px;
+            height: 72px;
+            background: var(--pink-100);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 18px;
+        }
+
+        .idle-icon svg {
+            width: 36px;
+            height: 36px;
+            color: var(--pink-soft);
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.5;
+        }
+
+        .idle-title {
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .idle-sub {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--sub);
+        }
+
         @media (min-width: 720px) {
             .main-wrap { height: calc(100vh - 62px); }
             .res-stack { flex-direction: row; align-items: stretch; }
             .res-stack .price-card { flex: 0 0 360px; }
             .res-stack .info-card { flex: 1; }
+            .big-price { font-size: clamp(72px, 8vw, 104px) !important; }
+        }
 
-            .big-price {
-                font-size: 80px !important;
-                font-size: clamp(72px, 8vw, 104px) !important;
+        @media (min-width: 1024px) {
+            .topbar,
+            .search-bar,
+            .content {
+                padding-right: 28px;
+                padding-left: 28px;
             }
         }
-        @media (min-width: 1024px) {
-            .topbar, .search-bar, .content { padding-right: 28px; padding-left: 28px; }
+
+        @media (max-width: 520px) {
+            .s-row {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .scan-actions { width: 100%; }
+
+            .scan-actions .s-btn,
+            .scan-actions .cam-btn {
+                flex: 1;
+                justify-content: center;
+                padding-right: 12px;
+                padding-left: 12px;
+            }
         }
     </style>
 </head>
-<body>
 
+<body>
     <header class="topbar">
         <div class="brand-row">
             <div>
@@ -218,11 +670,13 @@
                 <div class="brand-en">Price Reader</div>
             </div>
         </div>
+
         <div class="user-row">
             <div class="user-pill">
                 <div class="ava">{{ request.user.username|slice:":1"|upper }}</div>
                 <span>{{ request.user.username }}</span>
             </div>
+
             <form class="logout-form" method="post" action="{% url 'logout' %}">
                 {% csrf_token %}
                 <button class="out-btn" type="submit">خروج</button>
@@ -231,302 +685,578 @@
     </header>
 
     <div class="main-wrap">
-
         <div class="search-bar">
             <div class="s-hint">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9V6a1 1 0 011-1h3M3 15v3a1 1 0 001 1h3M15 5h3a1 1 0 011 1v3M15 19h3a1 1 0 001-1v-3M7 8v8M10 8v8M13 8v8M16 8v8"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9V6a1 1 0 011-1h3M3 15v3a1 1 0 001 1h3M15 5h3a1 1 0 011 1v3M15 19h3a1 1 0 001-1v-3M7 8v8M10 8v8M13 8v8M16 8v8"/>
+                </svg>
                 امسح الباركود أو أدخل رمز المنتج
             </div>
+
             <form class="s-row" method="get" autocomplete="off">
                 <div class="inp-wrap">
                     <div class="bc-ico">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="4" height="16" rx="1"/><rect x="8" y="4" width="2" height="16" rx="1"/><rect x="12" y="4" width="3" height="16" rx="1"/><rect x="17" y="4" width="2" height="16" rx="1"/><rect x="21" y="4" width="1" height="16" rx="1"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <rect x="2" y="4" width="4" height="16" rx="1"/>
+                            <rect x="8" y="4" width="2" height="16" rx="1"/>
+                            <rect x="12" y="4" width="3" height="16" rx="1"/>
+                            <rect x="17" y="4" width="2" height="16" rx="1"/>
+                            <rect x="21" y="4" width="1" height="16" rx="1"/>
+                        </svg>
                     </div>
+
                     {{ form.barcode }}
-                    {% if form.barcode.errors %}<div class="f-err">{{ form.barcode.errors|striptags }}</div>{% endif %}
+
+                    {% if form.barcode.errors %}
+                        <div class="f-err">{{ form.barcode.errors|striptags }}</div>
+                    {% endif %}
                 </div>
-                <button class="s-btn" type="submit">
-                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
-                    بحث
-                </button>
+
+                <div class="scan-actions">
+                    <button class="s-btn" type="submit">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="7"/>
+                            <path d="m21 21-4.35-4.35"/>
+                        </svg>
+                        بحث
+                    </button>
+
+                    <button class="cam-btn" id="cameraScanBtn" type="button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 8h4l1.5-2h5L16 8h4v11H4z"/>
+                            <circle cx="12" cy="13.5" r="3.2"/>
+                        </svg>
+                        كاميرا
+                    </button>
+                </div>
             </form>
         </div>
 
         <div class="content">
-
             {% if error %}
-            <div class="alert">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                {{ error }}
-            </div>
+                <div class="alert">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    {{ error }}
+                </div>
             {% endif %}
 
             {% if product %}
-            <div class="res-stack">
+                <div class="res-stack">
+                    <aside class="price-card">
+                        <div class="pc-top">
+                            <div class="pc-head">
+                                <span class="pc-lbl">السعر الإجمالي</span>
+                                <span class="vat-badge">شامل الضريبة</span>
+                            </div>
 
-                <aside class="price-card">
-                    <div class="pc-top">
-                        <div class="pc-head">
-                            <span class="pc-lbl">السعر الإجمالي</span>
-                            <span class="vat-badge">شامل الضريبة</span>
-                        </div>
-                        <div class="big-price" dir="ltr">
-                            <span class="sar-sym">&#xEA;</span>{{ product.total_with_tax|floatformat:2 }}
-                        </div>
-                        <div class="pnote">شامل ضريبة القيمة المضافة</div>
-                        <div class="pdiv"></div>
-                        <div class="pm">
-                            <div class="met">
-                                <span class="mlbl">قبل الضريبة</span>
-                                <div class="mval" dir="ltr">
-                                    <span class="sar-sym">&#xEA;</span>{{ product.i_price|floatformat:2 }}
+                            <div class="big-price" dir="ltr">
+                                <span class="sar-sym">&#xEA;</span>{{ product.total_with_tax|floatformat:2 }}
+                            </div>
+
+                            <div class="pnote">شامل ضريبة القيمة المضافة</div>
+                            <div class="pdiv"></div>
+
+                            <div class="pm">
+                                <div class="met">
+                                    <span class="mlbl">قبل الضريبة</span>
+                                    <div class="mval" dir="ltr">
+                                        <span class="sar-sym">&#xEA;</span>{{ product.i_price|floatformat:2 }}
+                                    </div>
+                                </div>
+
+                                <div class="met">
+                                    <span class="mlbl">نسبة الضريبة</span>
+                                    <div class="mval">
+                                        {{ product.total_tax_prcnt|floatformat:2 }}<span class="pct-sym"> %</span>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="met">
-                                <span class="mlbl">نسبة الضريبة</span>
-                                <div class="mval">
-                                    {{ product.total_tax_prcnt|floatformat:2 }}<span class="pct-sym"> %</span>
-                                </div>
+                        </div>
+                    </aside>
+
+                    <article class="info-card">
+                        <span class="result-tag">
+                            <svg viewBox="0 0 14 14">
+                                <path d="M7 1l1.6 3.3 3.7.5-2.7 2.6.6 3.7L7 9.5l-3.2 1.6.6-3.7L1.7 4.8l3.7-.5z"/>
+                            </svg>
+                            نتيجة البحث
+                        </span>
+
+                        <h2 class="pname">{{ product.i_name }}</h2>
+
+                        <div class="dg">
+                            <div class="det">
+                                <span class="dlbl">كود الصنف</span>
+                                <span class="dval">{{ product.i_code }}</span>
+                            </div>
+
+                            <div class="det">
+                                <span class="dlbl">وحدة القياس</span>
+                                <span class="dval">{{ product.itm_unt }}</span>
                             </div>
                         </div>
-                    </div>
-                </aside>
-
-                <article class="info-card">
-                    <span class="result-tag">
-                        <svg viewBox="0 0 14 14"><path d="M7 1l1.6 3.3 3.7.5-2.7 2.6.6 3.7L7 9.5l-3.2 1.6.6-3.7L1.7 4.8l3.7-.5z"/></svg>
-                        نتيجة البحث
-                    </span>
-                    <h2 class="pname">{{ product.i_name }}</h2>
-                    <div class="dg">
-                        <div class="det">
-                            <span class="dlbl">كود الصنف</span>
-                            <span class="dval">{{ product.i_code }}</span>
-                        </div>
-                        <div class="det">
-                            <span class="dlbl">وحدة القياس</span>
-                            <span class="dval">{{ product.itm_unt }}</span>
-                        </div>
-                    </div>
-                </article>
-
-            </div>
-
-            {% else %}{% if not error %}
-            <div class="idle">
-                <div class="idle-icon">
-                    <svg viewBox="0 0 24 24"><path d="M3 9V6a1 1 0 011-1h3M3 15v3a1 1 0 001 1h3M15 5h3a1 1 0 011 1v3M15 19h3a1 1 0 001-1v-3M7 8v8M10 8v8M13 8v8M16 8v8"/></svg>
+                    </article>
                 </div>
-                <div class="idle-title">جاهز للمسح</div>
-                <div class="idle-sub">امسح الباركود أو اكتب الرمز في الحقل أعلاه</div>
-            </div>
-            {% endif %}{% endif %}
+            {% else %}
+                {% if not error %}
+                    <div class="idle">
+                        <div class="idle-icon">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M3 9V6a1 1 0 011-1h3M3 15v3a1 1 0 001 1h3M15 5h3a1 1 0 011 1v3M15 19h3a1 1 0 001-1v-3M7 8v8M10 8v8M13 8v8M16 8v8"/>
+                            </svg>
+                        </div>
+                        <div class="idle-title">جاهز للمسح</div>
+                        <div class="idle-sub">امسح الباركود أو اكتب الرمز في الحقل أعلاه</div>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
 
+    <div class="lookup-loading" id="lookupLoading" hidden>
+        <div class="lookup-loading-card">
+            <div class="lookup-spinner"></div>
+            <div class="lookup-loading-title">جاري البحث</div>
+            <div class="lookup-loading-sub">يتم جلب بيانات الصنف الآن...</div>
+        </div>
+    </div>
+
+    <div class="camera-sheet" id="cameraSheet" hidden>
+        <div class="camera-panel">
+            <div class="camera-head">
+                <strong>قراءة الباركود بالكاميرا</strong>
+                <button class="camera-close" type="button" id="closeCameraBtn">إغلاق</button>
+            </div>
+
+            <div class="camera-frame">
+                <video id="cameraVideo" autoplay playsinline webkit-playsinline muted></video>
+                <div class="camera-target"></div>
+            </div>
+
+            <div class="camera-status" id="cameraStatus">
+                وجّه الكاميرا نحو الباركود
+            </div>
         </div>
     </div>
 
     <script>
-    const i = document.querySelector('input[name="barcode"]');
-    const form = i ? i.closest('form') : null;
+        const i = document.querySelector('input[name="barcode"]');
+        const form = i ? i.closest('form') : null;
+        const lookupLoading = document.getElementById('lookupLoading');
+        const searchButton = document.querySelector('.s-btn');
+        const cameraButton = document.querySelector('.cam-btn');
 
-    let buf = '';
-    let timer = null;
-    let lastKey = 0;
+        let buf = '';
+        let timer = null;
+        let lastKey = 0;
 
-    let inputBuf = '';
-    let inputTimer = null;
-    let inputLastKey = 0;
-    let replaceOnNextInput = false;
+        let inputBuf = '';
+        let inputTimer = null;
+        let inputLastKey = 0;
+        let replaceOnNextInput = false;
 
-    const RESET = 140;
-    const SUBMIT = 180;
-    const MIN = 3;
+        const RESET = 140;
+        const SUBMIT = 180;
+        const MIN = 3;
 
-    function isTouch() {
-        return window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
-    }
+        function showLookupLoading() {
+            if (lookupLoading) {
+                lookupLoading.hidden = false;
+            }
 
-    function isBarcodeKey(e) {
-        return e.key.length === 1 && /^[0-9A-Za-z_.-]$/.test(e.key);
-    }
+            if (searchButton) {
+                searchButton.disabled = true;
+                searchButton.setAttribute('aria-busy', 'true');
+            }
 
-    function doSubmit(val) {
-        const bc = String(val || '').trim();
-
-        if (!i || !form || bc.length < MIN) {
-            return;
+            if (cameraButton) {
+                cameraButton.disabled = true;
+            }
         }
 
-        i.value = bc;
-        buf = '';
-        inputBuf = '';
-        replaceOnNextInput = true;
+        if (form) {
+            form.addEventListener('submit', function () {
+                const value = i ? String(i.value || '').trim() : '';
 
-        form.requestSubmit ? form.requestSubmit() : form.submit();
-    }
-
-    function isOther(el) {
-        if (!el) {
-            return false;
+                if (value.length >= MIN) {
+                    showLookupLoading();
+                }
+            });
         }
 
-        return (
-            el.isContentEditable ||
-            ['TEXTAREA', 'SELECT', 'BUTTON'].includes(el.tagName) ||
-            (el.tagName === 'INPUT' && el !== i)
-        );
-    }
-
-    function selectBarcodeValue() {
-        if (!i || !i.value) {
-            return;
+        function isTouch() {
+            return window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
         }
 
-        setTimeout(function () {
-            try {
-                i.setSelectionRange(0, i.value.length);
-            } catch (e) {}
-        }, 0);
-    }
-
-    if (i) {
-        i.className = 'bc-input';
-        i.placeholder = 'امسح الباركود أو اكتب الرمز...';
-        i.setAttribute('inputmode', 'numeric');
-        i.setAttribute('autocomplete', 'off');
-
-        replaceOnNextInput = i.value.trim().length > 0;
-
-        if (!isTouch()) {
-            i.focus();
-            selectBarcodeValue();
+        function isBarcodeKey(e) {
+            return e.key.length === 1 && /^[0-9A-Za-z_.-]$/.test(e.key);
         }
 
-        i.addEventListener('focus', function () {
-            replaceOnNextInput = i.value.trim().length > 0;
-            selectBarcodeValue();
-        });
+        function doSubmit(val) {
+            const bc = String(val || '').trim();
 
-        i.addEventListener('click', function () {
-            replaceOnNextInput = i.value.trim().length > 0;
-            selectBarcodeValue();
-        });
-
-        i.addEventListener('touchend', function () {
-            replaceOnNextInput = i.value.trim().length > 0;
-            selectBarcodeValue();
-        }, { passive: true });
-
-        i.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') {
-                i.value = '';
-                buf = '';
-                inputBuf = '';
-                replaceOnNextInput = false;
+            if (!i || !form || bc.length < MIN) {
                 return;
             }
 
-            if (e.ctrlKey || e.altKey || e.metaKey) {
+            i.value = bc;
+            buf = '';
+            inputBuf = '';
+            replaceOnNextInput = true;
+
+            showLookupLoading();
+
+            form.requestSubmit ? form.requestSubmit() : form.submit();
+        }
+
+        function isOther(el) {
+            if (!el) {
+                return false;
+            }
+
+            return (
+                el.isContentEditable ||
+                ['TEXTAREA', 'SELECT', 'BUTTON'].includes(el.tagName) ||
+                (el.tagName === 'INPUT' && el !== i)
+            );
+        }
+
+        function selectBarcodeValue() {
+            if (!i || !i.value) {
+                return;
+            }
+
+            setTimeout(function () {
+                try {
+                    i.setSelectionRange(0, i.value.length);
+                } catch (e) {}
+            }, 0);
+        }
+
+        if (i) {
+            i.className = 'bc-input';
+            i.placeholder = 'امسح الباركود أو اكتب الرمز...';
+            i.setAttribute('inputmode', 'numeric');
+            i.setAttribute('autocomplete', 'off');
+
+            replaceOnNextInput = i.value.trim().length > 0;
+
+            if (!isTouch()) {
+                i.focus();
+                selectBarcodeValue();
+            }
+
+            i.addEventListener('focus', function () {
+                replaceOnNextInput = i.value.trim().length > 0;
+                selectBarcodeValue();
+            });
+
+            i.addEventListener('click', function () {
+                replaceOnNextInput = i.value.trim().length > 0;
+                selectBarcodeValue();
+            });
+
+            i.addEventListener('touchend', function () {
+                replaceOnNextInput = i.value.trim().length > 0;
+                selectBarcodeValue();
+            }, { passive: true });
+
+            i.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    i.value = '';
+                    buf = '';
+                    inputBuf = '';
+                    replaceOnNextInput = false;
+                    return;
+                }
+
+                if (e.ctrlKey || e.altKey || e.metaKey) {
+                    return;
+                }
+
+                const now = Date.now();
+
+                if (now - inputLastKey > RESET) {
+                    inputBuf = '';
+                }
+
+                inputLastKey = now;
+
+                if (e.key === 'Enter') {
+                    const value = inputBuf || i.value;
+
+                    if (String(value || '').trim().length >= MIN) {
+                        e.preventDefault();
+                        doSubmit(value);
+                    }
+
+                    return;
+                }
+
+                if (isBarcodeKey(e)) {
+                    if (replaceOnNextInput && i.value.trim().length > 0) {
+                        e.preventDefault();
+                        i.value = e.key;
+                        inputBuf = e.key;
+                        replaceOnNextInput = false;
+                    } else {
+                        inputBuf += e.key;
+                    }
+
+                    clearTimeout(inputTimer);
+
+                    inputTimer = setTimeout(function () {
+                        if (inputBuf.length >= MIN) {
+                            doSubmit(inputBuf);
+                        }
+                    }, SUBMIT);
+                }
+            });
+        }
+
+        if (document.fonts) {
+            document.fonts.ready.then(function () {
+                const loaded = document.fonts.check('bold 16px SaudiRiyalSymbol');
+
+                if (!loaded) {
+                    document.querySelectorAll('.sar-sym').forEach(function (el) {
+                        el.textContent = 'ريال';
+                        el.style.fontFamily = "'Cairo', sans-serif";
+                        el.style.fontSize = '0.42em';
+                        el.style.fontWeight = '900';
+                        el.style.verticalAlign = '0.22em';
+                        el.style.letterSpacing = '0';
+                        el.style.marginLeft = '5px';
+                    });
+                }
+            });
+        }
+
+        document.addEventListener('keydown', function (e) {
+            if (!i || !form || e.ctrlKey || e.altKey || e.metaKey) {
+                return;
+            }
+
+            if (document.activeElement === i || isOther(document.activeElement)) {
                 return;
             }
 
             const now = Date.now();
 
-            if (now - inputLastKey > RESET) {
-                inputBuf = '';
+            if (now - lastKey > RESET) {
+                buf = '';
             }
 
-            inputLastKey = now;
+            lastKey = now;
 
             if (e.key === 'Enter') {
-                const value = inputBuf || i.value;
-
-                if (String(value || '').trim().length >= MIN) {
+                if (buf.length >= MIN) {
                     e.preventDefault();
-                    doSubmit(value);
+                    doSubmit(buf);
                 }
 
                 return;
             }
 
             if (isBarcodeKey(e)) {
-                if (replaceOnNextInput && i.value.trim().length > 0) {
-                    e.preventDefault();
-                    i.value = e.key;
-                    inputBuf = e.key;
-                    replaceOnNextInput = false;
-                } else {
-                    inputBuf += e.key;
-                }
+                e.preventDefault();
 
-                clearTimeout(inputTimer);
+                buf += e.key;
+                i.value = buf;
 
-                inputTimer = setTimeout(function () {
-                    if (inputBuf.length >= MIN) {
-                        doSubmit(inputBuf);
+                clearTimeout(timer);
+
+                timer = setTimeout(function () {
+                    if (buf.length >= MIN) {
+                        doSubmit(buf);
                     }
                 }, SUBMIT);
             }
         });
-    }
+    </script>
 
-    document.fonts.ready.then(function () {
-        const loaded = document.fonts.check('bold 16px SaudiRiyalSymbol');
+    <script>
+        (function () {
+            const cameraInput = document.querySelector('input[name="barcode"]');
+            const cameraForm = cameraInput ? cameraInput.closest('form') : null;
 
-        if (!loaded) {
-            document.querySelectorAll('.sar-sym').forEach(function (el) {
-                el.textContent = 'ريال';
-                el.style.fontFamily = "'Cairo', sans-serif";
-                el.style.fontSize = '0.42em';
-                el.style.fontWeight = '900';
-                el.style.verticalAlign = '0.22em';
-                el.style.letterSpacing = '0';
-                el.style.marginLeft = '5px';
-            });
-        }
-    });
+            const openBtn = document.getElementById('cameraScanBtn');
+            const closeBtn = document.getElementById('closeCameraBtn');
+            const sheet = document.getElementById('cameraSheet');
+            const video = document.getElementById('cameraVideo');
+            const status = document.getElementById('cameraStatus');
 
-    document.addEventListener('keydown', function (e) {
-        if (!i || !form || e.ctrlKey || e.altKey || e.metaKey) {
-            return;
-        }
+            let controls = null;
+            let stream = null;
+            let submitted = false;
 
-        if (document.activeElement === i || isOther(document.activeElement)) {
-            return;
-        }
-
-        const now = Date.now();
-
-        if (now - lastKey > RESET) {
-            buf = '';
-        }
-
-        lastKey = now;
-
-        if (e.key === 'Enter') {
-            if (buf.length >= MIN) {
-                e.preventDefault();
-                doSubmit(buf);
+            function setStatus(message) {
+                if (status) {
+                    status.textContent = message;
+                }
             }
 
-            return;
-        }
+            function cleanBarcode(value) {
+                return String(value || '').trim().replace(/\s+/g, '');
+            }
 
-        if (isBarcodeKey(e)) {
-            e.preventDefault();
+            function submitCameraBarcode(value) {
+                const barcode = cleanBarcode(value);
 
-            buf += e.key;
-            i.value = buf;
-
-            clearTimeout(timer);
-
-            timer = setTimeout(function () {
-                if (buf.length >= MIN) {
-                    doSubmit(buf);
+                if (!barcode || submitted || !cameraInput || !cameraForm) {
+                    return;
                 }
-            }, SUBMIT);
-        }
-    });
-</script>
+
+                submitted = true;
+                cameraInput.value = barcode;
+                stopCamera();
+
+                if (typeof showLookupLoading === 'function') {
+                    showLookupLoading();
+                }
+
+                if (cameraForm.requestSubmit) {
+                    cameraForm.requestSubmit();
+                } else {
+                    cameraForm.submit();
+                }
+            }
+
+            function stopCamera() {
+                if (controls && typeof controls.stop === 'function') {
+                    controls.stop();
+                }
+
+                controls = null;
+
+                if (stream) {
+                    stream.getTracks().forEach(function (track) {
+                        track.stop();
+                    });
+                    stream = null;
+                }
+
+                if (video) {
+                    if (video.srcObject) {
+                        video.srcObject.getTracks().forEach(function (track) {
+                            track.stop();
+                        });
+                    }
+
+                    video.pause();
+                    video.srcObject = null;
+                    video.removeAttribute('src');
+                    video.load();
+                }
+
+                if (sheet) {
+                    sheet.hidden = true;
+                }
+            }
+
+            async function startWithZXing() {
+                if (!window.ZXingBrowser) {
+                    throw new Error('ZXing is not loaded');
+                }
+
+                const ReaderClass =
+                    ZXingBrowser.BrowserMultiFormatOneDReader ||
+                    ZXingBrowser.BrowserMultiFormatReader;
+
+                if (!ReaderClass) {
+                    throw new Error('ZXing reader is not available');
+                }
+
+                const reader = new ReaderClass();
+
+                const constraints = {
+                    audio: false,
+                    video: {
+                        facingMode: { ideal: 'environment' },
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        frameRate: { ideal: 30, max: 30 }
+                    }
+                };
+
+                controls = await reader.decodeFromConstraints(
+                    constraints,
+                    video,
+                    function (result) {
+                        if (!result) {
+                            return;
+                        }
+
+                        const value =
+                            typeof result.getText === 'function'
+                                ? result.getText()
+                                : result.text;
+
+                        submitCameraBarcode(value);
+                    }
+                );
+
+                if (video && video.srcObject) {
+                    stream = video.srcObject;
+                }
+
+                setStatus('وجّه الكاميرا نحو الباركود');
+            }
+
+            async function startCamera() {
+                if (!cameraInput || !cameraForm || !sheet || !video) {
+                    return;
+                }
+
+                submitted = false;
+                sheet.hidden = false;
+                setStatus('جاري تشغيل الكاميرا...');
+
+                video.setAttribute('playsinline', 'true');
+                video.setAttribute('webkit-playsinline', 'true');
+                video.muted = true;
+
+                if (!window.isSecureContext) {
+                    setStatus('الكاميرا تحتاج رابط HTTPS. افتح النظام من دومين Cloudflare.');
+                    return;
+                }
+
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    setStatus('المتصفح لا يدعم تشغيل الكاميرا.');
+                    return;
+                }
+
+                try {
+                    await startWithZXing();
+                } catch (error) {
+                    setStatus('تعذر تشغيل قارئ الكاميرا. تأكد من السماح بالكاميرا ومن فتح الرابط عبر Safari أو Chrome محدث.');
+                }
+            }
+
+            if (openBtn) {
+                openBtn.addEventListener('click', function () {
+                    startCamera();
+                });
+            }
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', stopCamera);
+            }
+
+            if (sheet) {
+                sheet.addEventListener('click', function (event) {
+                    if (event.target === sheet) {
+                        stopCamera();
+                    }
+                });
+            }
+
+            window.addEventListener('pagehide', stopCamera);
+        })();
+    </script>
 </body>
 </html>

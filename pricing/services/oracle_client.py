@@ -11,6 +11,14 @@ _client_initialized = False
 _pool = None
 _pool_key = None
 
+REQUIRED_TABLES = (
+    "IAS_ITM_UNT_BARCODE",
+    "IAS_ITM_MST",
+    "IAS_ITEM_PRICE",
+    "IAS_PRICING_LEVELS",
+    "GNR_TAX_ITM",
+)
+
 
 def validate_schema_name(schema_name):
     schema_name = schema_name.upper().strip()
@@ -89,6 +97,31 @@ def rows_to_dicts(cursor, rows):
     return [dict(zip(columns, row)) for row in rows]
 
 
+def get_oracle_error_code(exc):
+    if exc.args:
+        return getattr(exc.args[0], "code", None)
+
+    return None
+
+
+def find_unavailable_tables(connection, schema):
+    unavailable_tables = []
+
+    with connection.cursor() as cursor:
+        for table_name in REQUIRED_TABLES:
+            full_table_name = f"{schema}.{table_name}"
+
+            try:
+                cursor.execute(f"SELECT 1 FROM {full_table_name} WHERE 1 = 0")
+            except oracledb.DatabaseError as exc:
+                if get_oracle_error_code(exc) == 942 or "ORA-00942" in str(exc):
+                    unavailable_tables.append(full_table_name)
+                else:
+                    unavailable_tables.append(f"{full_table_name} - {exc}")
+
+    return unavailable_tables
+
+
 def find_price_by_barcode(barcode):
     config = get_active_settings()
 
@@ -108,7 +141,6 @@ def find_price_by_barcode(barcode):
             m.ITEM_SIZE,
             m.ITEM_TYPE,
             p.I_PRICE,
-            pl.A_CY,
             pl.A_CY,
             SUM(NVL(t.TAX_PRCNT, 0)) AS TOTAL_TAX_PRCNT,
             ROUND(p.I_PRICE + (p.I_PRICE * SUM(NVL(t.TAX_PRCNT, 0)) / 100), 2) AS TOTAL_WITH_TAX
@@ -130,13 +162,39 @@ def find_price_by_barcode(barcode):
         pool = get_pool(config)
 
         with pool.acquire() as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(sql, {
-                    "barcode": barcode,
-                    "pricing_level": config.pricing_level,
-                })
-                rows = cursor.fetchall()
-                return rows_to_dicts(cursor, rows)
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute(sql, {
+                        "barcode": barcode,
+                        "pricing_level": config.pricing_level,
+                    })
+                    rows = cursor.fetchall()
+                    return rows_to_dicts(cursor, rows)
+
+            except oracledb.DatabaseError as exc:
+                if get_oracle_error_code(exc) == 942 or "ORA-00942" in str(exc):
+                    unavailable_tables = find_unavailable_tables(connection, schema)
+
+                    print("Oracle missing/inaccessible tables:")
+                    for table_name in unavailable_tables:
+                        print(table_name)
+
+                    logger.error(
+                        "Oracle missing/inaccessible tables: %s",
+                        ", ".join(unavailable_tables),
+                    )
+
+                    if unavailable_tables:
+                        unavailable_text = ", ".join(unavailable_tables)
+                    else:
+                        unavailable_text = "unknown table or view"
+
+                    raise RuntimeError(
+                        "Oracle table/view does not exist or SELECT permission is missing: "
+                        + unavailable_text
+                    ) from exc
+
+                raise
 
     except Exception:
         logger.exception("Oracle barcode lookup failed")
