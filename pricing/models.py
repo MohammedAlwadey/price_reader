@@ -49,3 +49,53 @@ class BarcodeSearchLog(models.Model):
     class Meta:
         verbose_name = "سجل بحث باركود"
         verbose_name_plural = "سجل بحث الباركود"
+
+
+
+
+class ActiveUserSession(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="active_session",
+    )
+    session_key = models.CharField(max_length=40, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user} - {self.session_key}"
+    
+
+
+class UserLoginPolicy(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="login_policy",
+        verbose_name="المستخدم",
+    )
+    allow_multiple_sessions = models.BooleanField(
+        default=False,
+        verbose_name="السماح بالدخول من أكثر من جهاز",
+    )
+
+    class Meta:
+        verbose_name = "صلاحية دخول المستخدم"
+        verbose_name_plural = "صلاحيات دخول المستخدمين"
+
+    def __str__(self):
+        return str(self.user)
+
+
+def user_allows_multiple_sessions(user):
+    if not user.is_authenticated:
+        return True
+
+    # اختياري: لو تبغى السوبر يوزر دائمًا مسموح له
+    if user.is_superuser:
+        return True
+
+    try:
+        return user.login_policy.allow_multiple_sessions
+    except UserLoginPolicy.DoesNotExist:
+        return False
