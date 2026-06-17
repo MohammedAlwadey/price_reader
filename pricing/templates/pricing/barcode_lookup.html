@@ -3,13 +3,13 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="utf-8">
-    <title>{{ company_name }} — قارئ الأسعار</title>
+    <title>{{ company_name }} - قارئ الأسعار</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <!-- رمز الريال السعودي — يعمل على الجوال والكمبيوتر -->
     <link href="https://cdn.jsdelivr.net/npm/@abdulrysr/saudi-riyal-new-symbol-font/style.css" rel="stylesheet">
+    <script type="text/javascript" src="https://unpkg.com/@zxing/browser@0.2.0"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -25,27 +25,25 @@
             --sub: #c4a0b0;
             --border: #f0dce6;
             --page: #fdf6f9;
+            --discount: #13855c;
+            --discount-dark: #086243;
+            --discount-soft: #e6f8ef;
+            --discount-border: #a8e7c7;
+            --gold: #b7791f;
+            --gold-soft: #fff7df;
+            --gold-border: #f7d889;
         }
 
-        /* ══ رمز الريال ══
-           - على الجوال/كمبيوتر: خط SaudiRiyalSymbol (&#xEA;)
-           - على شاشة Newland (UA قديم): نص "ريال" عبر CSS content
-        */
         .sar-sym {
-            font-family: 'SaudiRiyalSymbol', sans-serif;
+            font-family: 'SaudiRiyalSymbol', 'Cairo', sans-serif;
             font-weight: bold;
-            color: var(--pink-dark);
+            color: currentColor;
             display: inline-block;
             line-height: 1;
         }
         .big-price .sar-sym { font-size: 0.5em; vertical-align: 0.2em; margin-left: 5px; }
-        .mval    .sar-sym { font-size: 0.78em; vertical-align: 0.08em; margin-left: 3px; }
-
-        /* Fallback: إذا فشل الخط تظهر "ريال" نصاً عادياً */
-        @supports not (font-family: 'SaudiRiyalSymbol') {
-            .sar-sym { font-family: 'Cairo', sans-serif; font-size: 0.55em !important; letter-spacing: 0; }
-            .sar-sym::before { content: "ريال"; }
-        }
+        .mval .sar-sym { font-size: 0.78em; vertical-align: 0.08em; margin-left: 3px; }
+        .price-inline .sar-sym { font-size: .78em; vertical-align: .08em; margin-left: 3px; }
 
         html, body {
             height: 100%;
@@ -56,161 +54,217 @@
             -webkit-text-size-adjust: 100%;
         }
 
-        /* ════ TOPBAR ════ */
-        .topbar {
-            display: flex; align-items: center; justify-content: space-between;
-            background: #fff; border-bottom: 2px solid var(--pink-border);
-            padding: 10px 18px; gap: 10px;
-            box-shadow: 0 2px 12px rgba(232,53,122,.07);
-        }
+        /* ── TOPBAR ── */
+        .topbar { display: flex; align-items: center; justify-content: space-between; background: #fff; border-bottom: 2px solid var(--pink-border); padding: 10px 18px; gap: 10px; box-shadow: 0 2px 12px rgba(232,53,122,.07); }
         .brand-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
         .brand-title { font-size: 19px; font-weight: 900; color: var(--pink-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .brand-en { font-size: 11px; color: var(--muted); font-weight: 600; }
         .user-row { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-        .user-pill {
-            display: flex; align-items: center; gap: 6px;
-            background: var(--pink-50); border: 1px solid var(--pink-border);
-            border-radius: 999px; padding: 5px 13px 5px 6px;
-            font-size: 13px; font-weight: 700; color: var(--muted); white-space: nowrap;
-        }
-        .ava {
-            width: 26px; height: 26px; border-radius: 50%;
-            background: linear-gradient(135deg, var(--pink-soft), var(--pink-dark));
-            display: flex; align-items: center; justify-content: center;
-            color: #fff; font-size: 11px; font-weight: 900; flex-shrink: 0;
-        }
+        .user-pill { display: flex; align-items: center; gap: 6px; background: var(--pink-50); border: 1px solid var(--pink-border); border-radius: 999px; padding: 5px 13px 5px 6px; font-size: 13px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+        .ava { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, var(--pink-soft), var(--pink-dark)); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 900; flex-shrink: 0; }
         .logout-form { margin: 0; }
-        .out-btn {
-            height: 36px; padding: 0 15px;
-            border: 1.5px solid var(--pink-border); border-radius: 8px;
-            background: #fff; color: var(--pink-dark);
-            font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer;
-            transition: background .14s;
-        }
+        .out-btn { height: 36px; padding: 0 15px; border: 1.5px solid var(--pink-border); border-radius: 8px; background: #fff; color: var(--pink-dark); font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: background .14s; }
         .out-btn:hover { background: var(--pink-50); }
 
-        /* ════ LAYOUT ════ */
+        /* ── LAYOUT ── */
         .main-wrap { display: flex; flex-direction: column; height: calc(100vh - 58px); overflow: hidden; }
 
-        /* ════ SEARCH BAR ════ */
-        .search-bar {
-            background: #fff; border-bottom: 2px solid var(--pink-border);
-            padding: 13px 18px; flex-shrink: 0;
-        }
+        /* ── SEARCH ── */
+        .search-bar { background: #fff; border-bottom: 2px solid var(--pink-border); padding: 13px 18px; flex-shrink: 0; }
         .s-hint { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 9px; display: flex; align-items: center; gap: 6px; }
         .s-hint svg { width: 14px; height: 14px; opacity: .5; }
         .s-row { display: flex; gap: 10px; align-items: center; }
         .inp-wrap { flex: 1; position: relative; }
         .bc-ico { position: absolute; top: 50%; transform: translateY(-50%); right: 15px; pointer-events: none; color: var(--pink-soft); }
         .bc-ico svg { width: 20px; height: 20px; }
-        .bc-input {
-            width: 100%; height: 56px;
-            background: var(--pink-50); border: 2px solid var(--pink-border);
-            border-radius: 14px; padding: 0 48px 0 16px;
-            color: var(--ink); font-family: 'Cairo', sans-serif;
-            font-size: 20px; font-weight: 800; direction: ltr; text-align: left;
-            -webkit-appearance: none; transition: border-color .18s, box-shadow .18s;
-        }
+        .bc-input { width: 100%; height: 56px; background: var(--pink-50); border: 2px solid var(--pink-border); border-radius: 14px; padding: 0 48px 0 16px; color: var(--ink); font-family: 'Cairo', sans-serif; font-size: 20px; font-weight: 800; direction: ltr; text-align: left; -webkit-appearance: none; transition: border-color .18s, box-shadow .18s; }
         .bc-input:focus { outline: 0; border-color: var(--pink); background: #fff; box-shadow: 0 0 0 4px rgba(232,53,122,.12); }
         .bc-input::placeholder { color: var(--sub); font-size: 14px; font-weight: 500; }
-        .s-btn {
-            height: 56px; padding: 0 24px;
-            background: var(--pink); border: 0; border-radius: 14px; color: #fff;
-            font-family: 'Cairo', sans-serif; font-size: 16px; font-weight: 900;
-            cursor: pointer; display: flex; align-items: center; gap: 7px; flex-shrink: 0;
-            box-shadow: 0 4px 14px rgba(232,53,122,.35); -webkit-tap-highlight-color: transparent;
-            transition: background .14s, transform .14s;
-        }
+        .scan-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        .s-btn, .cam-btn { height: 56px; border-radius: 14px; font-family: 'Cairo', sans-serif; font-size: 15px; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 7px; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
+        .s-btn { padding: 0 24px; background: var(--pink); border: 0; color: #fff; box-shadow: 0 4px 14px rgba(232,53,122,.35); transition: background .14s, transform .14s; }
         .s-btn:hover { background: var(--pink-dark); transform: translateY(-1px); }
-        .s-btn svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.2; }
+        .cam-btn { padding: 0 18px; background: #fff; border: 2px solid var(--pink-border); color: var(--pink-dark); }
+        .s-btn svg, .cam-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; }
+        .s-btn[disabled], .cam-btn[disabled] { opacity: .75; cursor: wait; transform: none; }
         .f-err { margin-top: 7px; background: #fff0f4; border: 1px solid #ffc8d9; color: #9a0030; border-radius: 8px; padding: 8px 12px; font-size: 12px; font-weight: 600; }
 
-        /* ════ CONTENT ════ */
-        .content { flex: 1; overflow-y: auto; padding: 16px 18px 24px; -webkit-overflow-scrolling: touch; }
+        /* ── LOADING ── */
+        .lookup-loading[hidden] { display: none !important; }
+        .lookup-loading { position: fixed; inset: 0; z-index: 10000; background: rgba(253,246,249,.82); backdrop-filter: blur(8px); display: grid; place-items: center; padding: 20px; }
+        .lookup-loading-card { width: min(240px, 90vw); background: #fff; border: 2px solid var(--pink-border); border-radius: 20px; padding: 24px 20px; text-align: center; box-shadow: 0 18px 45px rgba(232,53,122,.18); }
+        .lookup-spinner { width: 46px; height: 46px; border-radius: 50%; border: 4px solid var(--pink-100); border-top-color: var(--pink); margin: 0 auto 14px; animation: lookupSpin .8s linear infinite; }
+        .lookup-loading-title { font-size: 15px; font-weight: 900; color: var(--pink-dark); margin-bottom: 3px; }
+        .lookup-loading-sub { font-size: 12px; font-weight: 700; color: var(--muted); }
+        @keyframes lookupSpin { to { transform: rotate(360deg); } }
 
+        /* ── CAMERA ── */
+        .camera-sheet[hidden] { display: none !important; }
+        .camera-sheet { position: fixed; inset: 0; z-index: 9999; background: rgba(28,15,22,.76); display: grid; place-items: center; padding: 16px; }
+        .camera-panel { width: min(540px, 100%); background: #fff; border: 2px solid var(--pink-border); border-radius: 22px; padding: 14px; box-shadow: 0 18px 60px rgba(28,15,22,.22); }
+        .camera-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; color: var(--ink); font-size: 15px; font-weight: 900; }
+        .camera-close { border: 0; border-radius: 10px; padding: 8px 14px; background: var(--pink-100); color: var(--pink-dark); font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: 900; cursor: pointer; }
+        .camera-frame { position: relative; overflow: hidden; border-radius: 18px; background: #111; border: 1px solid var(--pink-border); }
+        #cameraVideo { display: block; width: 100%; aspect-ratio: 4/3; object-fit: cover; background: #111; }
+        .camera-target { position: absolute; inset: 23% 10%; border: 2px solid rgba(255,255,255,.88); border-radius: 16px; pointer-events: none; box-shadow: 0 0 0 999px rgba(0,0,0,.18); }
+        .camera-status { margin-top: 10px; color: var(--muted); text-align: center; font-size: 13px; font-weight: 700; min-height: 22px; }
+
+        /* ── CONTENT ── */
+        .content { flex: 1; overflow-y: auto; padding: 16px 18px 24px; -webkit-overflow-scrolling: touch; }
         .alert { background: #fff0f4; border: 1.5px solid #ffc8d9; color: #9a0030; border-radius: 10px; padding: 13px 16px; margin-bottom: 14px; display: flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 700; }
         .alert svg { width: 16px; height: 16px; flex-shrink: 0; }
-
-        /* ════ RESULT STACK ════ */
         .res-stack { display: flex; flex-direction: column; gap: 14px; }
 
-        /* ─── PRICE CARD ─── */
-        .price-card {
-            background: #fff; border: 2px solid var(--pink-border);
-            border-radius: 20px; padding: 20px 22px;
-            box-shadow: 0 4px 20px rgba(232,53,122,.1);
-            position: relative; overflow: hidden;
-        }
-        .price-card::after {
-            content: ""; position: absolute; bottom: -28px; left: -28px;
-            width: 140px; height: 140px; border-radius: 50%;
-            background: var(--pink-100); opacity: .55; pointer-events: none;
-        }
-        .pc-top { position: relative; z-index: 1; }
-        .pc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-        .pc-lbl { font-size: 13px; font-weight: 700; color: var(--muted); }
-        .vat-badge { background: var(--pink-100); border: 1px solid var(--pink-border); border-radius: 999px; padding: 4px 12px; font-size: 11px; font-weight: 900; color: var(--pink-dark); }
+        /* ── PRICE CARD ── */
+        .price-card, .info-card { background: #fff; border-radius: 20px; }
+        .price-card { border: 2px solid var(--pink-border); padding: 20px 22px; box-shadow: 0 4px 20px rgba(232,53,122,.1); position: relative; overflow: hidden; }
+        .price-card.has-discount { border-color: var(--discount-border); background: linear-gradient(180deg, #fff, #fbfffd); box-shadow: 0 14px 38px rgba(19,133,92,.16); }
+        .price-card::after { content: ""; position: absolute; bottom: -28px; left: -28px; width: 140px; height: 140px; border-radius: 50%; background: var(--pink-100); opacity: .55; pointer-events: none; }
+        .price-card.has-discount::after { background: var(--discount-soft); opacity: .9; }
 
-        .big-price {
-            font-size: 78px;
-            font-size: clamp(62px, 15vw, 96px);
+        .discount-ribbon { position: absolute; top: 14px; left: 14px; z-index: 2; min-height: 34px; padding: 0 13px; border-radius: 999px; background: var(--discount); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; box-shadow: 0 8px 18px rgba(19,133,92,.22); }
+
+        .pc-top { position: relative; z-index: 1; }
+        .pc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 10px; padding-left: 96px; }
+        .pc-lbl { font-size: 13px; font-weight: 700; color: var(--muted); }
+        .has-discount .pc-lbl { color: var(--discount-dark); font-weight: 900; }
+        .vat-badge { background: var(--pink-100); border: 1px solid var(--pink-border); border-radius: 999px; padding: 4px 12px; font-size: 11px; font-weight: 900; color: var(--pink-dark); white-space: nowrap; }
+        .has-discount .vat-badge { background: var(--discount-soft); border-color: var(--discount-border); color: var(--discount-dark); }
+
+        .big-price { font-size: clamp(62px,15vw,96px); font-weight: 900; color: var(--pink-dark); line-height: 1; margin-bottom: 5px; direction: ltr; text-align: right; }
+        .has-discount .big-price { color: var(--discount-dark); }
+
+        .pnote { font-size: 12px; color: var(--sub); text-align: right; margin-bottom: 14px; font-weight: 600; }
+        .has-discount .pnote { color: var(--discount); font-weight: 900; }
+
+        /* ── قسم الخصم الجديد ── */
+        .discount-prices {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 0 0 14px;
+        }
+        .dp-box {
+            border-radius: 14px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .dp-box.before {
+            background: #fff;
+            border: 1.5px dashed var(--pink-border);
+        }
+        .dp-box.after {
+            background: var(--discount-soft);
+            border: 1.5px solid var(--discount-border);
+        }
+        .dp-label {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+        .dp-box.after .dp-label { color: var(--discount-dark); }
+        .dp-price {
+            font-size: clamp(18px, 4vw, 24px);
             font-weight: 900;
-            color: var(--pink-dark);
-            line-height: 1;
-            letter-spacing: -2px;
-            margin-bottom: 5px;
             direction: ltr;
             text-align: right;
         }
-        .pnote { font-size: 12px; color: var(--sub); text-align: right; margin-bottom: 14px; font-weight: 600; }
-        .pdiv { height: 1px; background: var(--border); margin: 0 0 14px; }
+        .dp-box.before .dp-price { color: #8b6d78; text-decoration: line-through; text-decoration-thickness: 2px; }
+        .dp-box.after  .dp-price { color: var(--discount-dark); }
+        .dp-sub {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--sub);
+        }
+        .dp-box.after .dp-sub { color: var(--discount); }
 
+        .saving-strip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            background: var(--gold-soft);
+            border: 1.5px solid var(--gold-border);
+            border-radius: 12px;
+            padding: 11px 14px;
+            margin-bottom: 14px;
+        }
+        .saving-strip-label { font-size: 13px; font-weight: 800; color: var(--gold); }
+        .saving-strip-value { font-size: 18px; font-weight: 900; color: #6b4a00; direction: ltr; }
+
+        .pdiv { height: 1px; background: var(--border); margin: 0 0 14px; }
         .pm { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; position: relative; z-index: 1; }
-        .met { background: var(--pink-50); border: 1px solid var(--pink-border); border-radius: 12px; padding: 13px; }
-        .mlbl { display: block; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 7px; }
-        .mval { font-size: clamp(17px, 4.5vw, 22px); font-weight: 900; color: var(--ink); direction: ltr; text-align: right; }
+        .met, .det { background: var(--pink-50); border: 1px solid var(--pink-border); border-radius: 12px; padding: 13px; }
+        .has-discount .met { background: #fff; border-color: var(--discount-border); }
+        .mlbl, .dlbl { display: block; color: var(--muted); font-size: 11px; font-weight: 700; margin-bottom: 7px; }
+        .mval { font-size: clamp(17px,4.5vw,22px); font-weight: 900; color: var(--ink); direction: ltr; text-align: right; }
         .pct-sym { font-size: .72em; color: var(--muted); font-weight: 700; }
 
-        /* ─── INFO CARD ─── */
-        .info-card {
-            background: #fff; border: 1.5px solid var(--border);
-            border-radius: 20px; padding: 20px 22px;
-            box-shadow: 0 2px 12px rgba(0,0,0,.04);
-        }
+        /* ── INFO CARD ── */
+        .info-card { border: 1.5px solid var(--border); padding: 20px 22px; box-shadow: 0 2px 12px rgba(0,0,0,.04); }
         .result-tag { display: inline-flex; align-items: center; gap: 5px; height: 27px; background: var(--pink-100); border: 1px solid var(--pink-border); border-radius: 999px; padding: 0 13px; color: var(--pink-dark); font-size: 12px; font-weight: 900; }
         .result-tag svg { width: 12px; height: 12px; fill: var(--pink); }
-        .pname { margin: 11px 0 18px; font-size: clamp(19px, 5vw, 36px); font-weight: 900; line-height: 1.25; color: var(--ink); }
-        .dg { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .det { background: var(--pink-50); border: 1px solid var(--pink-border); border-radius: 12px; padding: 13px 15px; }
-        .dlbl { display: block; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 5px; }
-        .dval { display: block; font-size: clamp(14px, 3.5vw, 18px); font-weight: 800; color: var(--ink); overflow-wrap: anywhere; }
+        .pname { margin: 11px 0 18px; font-size: clamp(19px,5vw,36px); font-weight: 900; line-height: 1.25; color: var(--ink); }
 
-        /* ─── IDLE ─── */
+        .promo-card { margin: 0 0 16px; border: 1.5px solid var(--pink-border); border-radius: 16px; background: linear-gradient(135deg,#fff8fb,#fff); padding: 14px; box-shadow: 0 8px 22px rgba(232,53,122,.08); }
+        .promo-card.discount { border-color: var(--discount-border); background: linear-gradient(135deg,#f0fff7,#fff); box-shadow: 0 10px 26px rgba(19,133,92,.1); }
+        .promo-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+        .promo-badge { display: inline-flex; align-items: center; min-height: 28px; padding: 0 12px; border-radius: 999px; background: var(--pink-100); color: var(--pink-dark); font-size: 12px; font-weight: 900; }
+        .promo-card.discount .promo-badge { background: var(--discount); color: #fff; }
+        .promo-active { color: var(--pink-dark); font-size: 12px; font-weight: 900; white-space: nowrap; }
+        .promo-card.discount .promo-active { color: var(--discount-dark); }
+        .promo-name { font-size: 15px; font-weight: 900; color: var(--ink); line-height: 1.6; margin-bottom: 6px; }
+        .promo-details { font-size: 13px; font-weight: 700; color: var(--muted); line-height: 1.7; }
+        .promo-period { margin-top: 10px; font-size: 12px; font-weight: 700; color: var(--sub); }
+
+        .dg { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .dval { display: block; font-size: clamp(14px,3.5vw,18px); font-weight: 800; color: var(--ink); overflow-wrap: anywhere; }
+
+        /* ── IDLE ── */
         .idle { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 20px; text-align: center; }
         .idle-icon { width: 72px; height: 72px; background: var(--pink-100); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 18px; }
         .idle-icon svg { width: 36px; height: 36px; color: var(--pink-soft); fill: none; stroke: currentColor; stroke-width: 1.5; }
         .idle-title { font-size: 18px; font-weight: 900; color: var(--muted); margin-bottom: 6px; }
         .idle-sub { font-size: 13px; font-weight: 600; color: var(--sub); }
 
-        /* ════ RESPONSIVE ════ */
+        /* ── RESPONSIVE ── */
         @media (min-width: 720px) {
             .main-wrap { height: calc(100vh - 62px); }
             .res-stack { flex-direction: row; align-items: stretch; }
-            .res-stack .price-card { flex: 0 0 360px; }
+            .res-stack .price-card { flex: 0 0 390px; }
             .res-stack .info-card { flex: 1; }
-
-            .big-price {
-                font-size: 80px !important;
-                font-size: clamp(72px, 8vw, 104px) !important;
-            }
+            .big-price { font-size: clamp(72px,8vw,104px) !important; }
         }
         @media (min-width: 1024px) {
             .topbar, .search-bar, .content { padding-right: 28px; padding-left: 28px; }
         }
+        @media (max-width: 520px) {
+            .topbar { padding: 9px 12px; align-items: flex-start; }
+            .brand-title { font-size: 16px; } .brand-en { font-size: 10px; }
+            .user-row { gap: 6px; }
+            .user-pill { padding: 4px 9px 4px 5px; font-size: 12px; }
+            .out-btn { height: 34px; padding: 0 12px; font-size: 12px; }
+            .search-bar { padding: 12px; }
+            .s-row { align-items: stretch; flex-direction: column; }
+            .scan-actions { width: 100%; }
+            .scan-actions .s-btn, .scan-actions .cam-btn { flex: 1; justify-content: center; padding-right: 12px; padding-left: 12px; }
+            .content { padding: 12px 12px 18px; }
+            .price-card, .info-card { border-radius: 18px; padding: 16px; }
+            .pc-head { padding-left: 0; padding-top: 42px; align-items: flex-start; }
+            .discount-ribbon { top: 12px; left: 12px; right: auto; min-height: 30px; font-size: 12px; }
+            .big-price { font-size: clamp(54px,18vw,78px); }
+            .discount-prices { grid-template-columns: 1fr; }
+            .pm, .dg { grid-template-columns: 1fr; }
+            .pname { font-size: clamp(20px,7vw,28px); margin-bottom: 14px; }
+            .promo-head { align-items: flex-start; flex-direction: column; gap: 6px; }
+        }
     </style>
 </head>
 <body>
-
     <header class="topbar">
         <div class="brand-row">
             <div>
@@ -231,7 +285,6 @@
     </header>
 
     <div class="main-wrap">
-
         <div class="search-bar">
             <div class="s-hint">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9V6a1 1 0 011-1h3M3 15v3a1 1 0 001 1h3M15 5h3a1 1 0 011 1v3M15 19h3a1 1 0 001-1v-3M7 8v8M10 8v8M13 8v8M16 8v8"/></svg>
@@ -245,15 +298,20 @@
                     {{ form.barcode }}
                     {% if form.barcode.errors %}<div class="f-err">{{ form.barcode.errors|striptags }}</div>{% endif %}
                 </div>
-                <button class="s-btn" type="submit">
-                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
-                    بحث
-                </button>
+                <div class="scan-actions">
+                    <button class="s-btn" type="submit">
+                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+                        بحث
+                    </button>
+                    <button class="cam-btn" id="cameraScanBtn" type="button">
+                        <svg viewBox="0 0 24 24"><path d="M4 8h4l1.5-2h5L16 8h4v11H4z"/><circle cx="12" cy="13.5" r="3.2"/></svg>
+                        كاميرا
+                    </button>
+                </div>
             </form>
         </div>
 
         <div class="content">
-
             {% if error %}
             <div class="alert">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -264,52 +322,132 @@
             {% if product %}
             <div class="res-stack">
 
-                <aside class="price-card">
+                <!-- بطاقة السعر -->
+                <aside class="price-card {% if product.promotion_type == 'discount' and product.total_after_discount %}has-discount{% endif %}">
+
+                    {% if product.promotion_type == 'discount' and product.total_after_discount %}
+                        <div class="discount-ribbon">
+                            {% if product.discount_percent %}خصم {{ product.discount_percent|floatformat:0 }}%{% else %}خصم فعال{% endif %}
+                        </div>
+                    {% endif %}
+
                     <div class="pc-top">
                         <div class="pc-head">
-                            <span class="pc-lbl">السعر الإجمالي</span>
-                            <span class="vat-badge">شامل الضريبة</span>
+                            {% if product.promotion_type == 'discount' and product.total_after_discount %}
+                                <span class="pc-lbl">السعر بعد الخصم</span>
+                                <span class="vat-badge">شامل الضريبة</span>
+                            {% else %}
+                                <span class="pc-lbl">السعر الإجمالي</span>
+                                <span class="vat-badge">شامل الضريبة</span>
+                            {% endif %}
                         </div>
+
+                        <!-- السعر الكبير -->
                         <div class="big-price" dir="ltr">
-                            <span class="sar-sym">&#xEA;</span>{{ product.total_with_tax|floatformat:2 }}
+                            {% if product.promotion_type == 'discount' and product.total_after_discount %}
+                                <span class="sar-sym">&#xEA;</span>{{ product.total_after_discount|floatformat:2 }}
+                            {% else %}
+                                <span class="sar-sym">&#xEA;</span>{{ product.total_with_tax|floatformat:2 }}
+                            {% endif %}
                         </div>
-                        <div class="pnote">شامل ضريبة القيمة المضافة</div>
+                        <div class="pnote">
+                            {% if product.promotion_type == 'discount' and product.total_after_discount %}
+                                السعر النهائي بعد الخصم شامل الضريبة
+                            {% else %}
+                                شامل ضريبة القيمة المضافة
+                            {% endif %}
+                        </div>
+
+                        <!-- ── قسم الخصم: قبل وبعد فقط بدون كلام إضافي ── -->
+                        {% if product.promotion_type == 'discount' and product.total_after_discount %}
+                        <div class="discount-prices">
+                            <div class="dp-box before">
+                                <span class="dp-label">قبل الخصم</span>
+                                <span class="dp-price price-inline" dir="ltr">
+                                    <span class="sar-sym">&#xEA;</span>{{ product.total_with_tax|floatformat:2 }}
+                                </span>
+                                <span class="dp-sub">شامل الضريبة</span>
+                            </div>
+                            <div class="dp-box after">
+                                <span class="dp-label">بعد الخصم</span>
+                                <span class="dp-price price-inline" dir="ltr">
+                                    <span class="sar-sym">&#xEA;</span>{{ product.total_after_discount|floatformat:2 }}
+                                </span>
+                                <span class="dp-sub">شامل الضريبة</span>
+                            </div>
+                        </div>
+
+                        <!-- شريط التوفير -->
+                        {% if product.discount_amount %}
+                        <div class="saving-strip">
+                            <span class="saving-strip-label">💰 وفّرت</span>
+                            <span class="saving-strip-value price-inline" dir="ltr">
+                                <span class="sar-sym">&#xEA;</span>{{ product.discount_amount|floatformat:2 }}
+                            </span>
+                        </div>
+                        {% endif %}
+                        {% endif %}
+
                         <div class="pdiv"></div>
+
                         <div class="pm">
                             <div class="met">
-                                <span class="mlbl">قبل الضريبة</span>
+                                <span class="mlbl">
+                                    {% if product.promotion_type == 'discount' and product.price_after_discount %}قبل الضريبة بعد الخصم{% else %}قبل الضريبة{% endif %}
+                                </span>
                                 <div class="mval" dir="ltr">
-                                    <span class="sar-sym">&#xEA;</span>{{ product.i_price|floatformat:2 }}
+                                    {% if product.promotion_type == 'discount' and product.price_after_discount %}
+                                        <span class="sar-sym">&#xEA;</span>{{ product.price_after_discount|floatformat:2 }}
+                                    {% else %}
+                                        <span class="sar-sym">&#xEA;</span>{{ product.i_price|floatformat:2 }}
+                                    {% endif %}
                                 </div>
                             </div>
                             <div class="met">
                                 <span class="mlbl">نسبة الضريبة</span>
-                                <div class="mval">
-                                    {{ product.total_tax_prcnt|floatformat:2 }}<span class="pct-sym"> %</span>
-                                </div>
+                                <div class="mval">{{ product.total_tax_prcnt|floatformat:2 }}<span class="pct-sym"> %</span></div>
                             </div>
                         </div>
                     </div>
                 </aside>
 
+                <!-- بطاقة المعلومات -->
                 <article class="info-card">
                     <span class="result-tag">
                         <svg viewBox="0 0 14 14"><path d="M7 1l1.6 3.3 3.7.5-2.7 2.6.6 3.7L7 9.5l-3.2 1.6.6-3.7L1.7 4.8l3.7-.5z"/></svg>
                         نتيجة البحث
                     </span>
                     <h2 class="pname">{{ product.i_name }}</h2>
+
+                    {% if product.has_promotion %}
+                    <div class="promo-card {% if product.promotion_type == 'discount' %}discount{% endif %}">
+                        <div class="promo-head">
+                            <span class="promo-badge">
+                                {% if product.promotion_type == 'discount' %}خصم على الصنف{% else %}{{ product.promotion_title }}{% endif %}
+                            </span>
+                            <span class="promo-active">عرض فعال</span>
+                        </div>
+                        <div class="promo-name">{{ product.promotion_name }}</div>
+                        <div class="promo-details">
+                            {% if product.promotion_type == 'discount' and product.total_after_discount %}
+                                السعر بعد الخصم شامل الضريبة:
+                                <span class="price-inline" dir="ltr"><span class="sar-sym">&#xEA;</span>{{ product.total_after_discount|floatformat:2 }}</span>
+                                {% if product.discount_percent %} — نسبة الخصم {{ product.discount_percent|floatformat:2 }}%{% endif %}
+                            {% else %}
+                                {{ product.promotion_details }}
+                            {% endif %}
+                        </div>
+                        {% if product.promotion_from or product.promotion_to %}
+                        <div class="promo-period">من {{ product.promotion_from }} إلى {{ product.promotion_to }}</div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
                     <div class="dg">
-                        <div class="det">
-                            <span class="dlbl">كود الصنف</span>
-                            <span class="dval">{{ product.i_code }}</span>
-                        </div>
-                        <div class="det">
-                            <span class="dlbl">وحدة القياس</span>
-                            <span class="dval">{{ product.itm_unt }}</span>
-                        </div>
+                        <div class="det"><span class="dlbl">كود الصنف</span><span class="dval">{{ product.i_code }}</span></div>
+                        <div class="det"><span class="dlbl">وحدة القياس</span><span class="dval">{{ product.itm_unt }}</span></div>
                     </div>
                 </article>
-
             </div>
 
             {% else %}{% if not error %}
@@ -321,212 +459,198 @@
                 <div class="idle-sub">امسح الباركود أو اكتب الرمز في الحقل أعلاه</div>
             </div>
             {% endif %}{% endif %}
+        </div>
+    </div>
 
+    <!-- Loading -->
+    <div class="lookup-loading" id="lookupLoading" hidden>
+        <div class="lookup-loading-card">
+            <div class="lookup-spinner"></div>
+            <div class="lookup-loading-title">جاري البحث</div>
+            <div class="lookup-loading-sub">يتم جلب بيانات الصنف الآن...</div>
+        </div>
+    </div>
+
+    <!-- Camera -->
+    <div class="camera-sheet" id="cameraSheet" hidden>
+        <div class="camera-panel">
+            <div class="camera-head">
+                <strong>قراءة الباركود بالكاميرا</strong>
+                <button class="camera-close" type="button" id="closeCameraBtn">إغلاق</button>
+            </div>
+            <div class="camera-frame">
+                <video id="cameraVideo" autoplay playsinline webkit-playsinline muted></video>
+                <div class="camera-target"></div>
+            </div>
+            <div class="camera-status" id="cameraStatus">وجّه الكاميرا نحو الباركود</div>
         </div>
     </div>
 
     <script>
-    const i = document.querySelector('input[name="barcode"]');
-    const form = i ? i.closest('form') : null;
+        const i = document.querySelector('input[name="barcode"]');
+        const form = i ? i.closest('form') : null;
+        const lookupLoading = document.getElementById('lookupLoading');
+        const searchButton = document.querySelector('.s-btn');
+        const cameraButton = document.querySelector('.cam-btn');
+        let buf = '', timer = null, lastKey = 0;
+        let inputBuf = '', inputTimer = null, inputLastKey = 0, replaceOnNextInput = false;
+        const RESET = 140, SUBMIT = 180, MIN = 3;
 
-    let buf = '';
-    let timer = null;
-    let lastKey = 0;
-
-    let inputBuf = '';
-    let inputTimer = null;
-    let inputLastKey = 0;
-    let replaceOnNextInput = false;
-
-    const RESET = 140;
-    const SUBMIT = 180;
-    const MIN = 3;
-
-    function isTouch() {
-        return window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
-    }
-
-    function isBarcodeKey(e) {
-        return e.key.length === 1 && /^[0-9A-Za-z_.-]$/.test(e.key);
-    }
-
-    function doSubmit(val) {
-        const bc = String(val || '').trim();
-
-        if (!i || !form || bc.length < MIN) {
-            return;
+        function showLookupLoading() {
+            if (lookupLoading) lookupLoading.hidden = false;
+            if (searchButton) { searchButton.disabled = true; searchButton.setAttribute('aria-busy','true'); }
+            if (cameraButton) cameraButton.disabled = true;
         }
 
-        i.value = bc;
-        buf = '';
-        inputBuf = '';
-        replaceOnNextInput = true;
-
-        form.requestSubmit ? form.requestSubmit() : form.submit();
-    }
-
-    function isOther(el) {
-        if (!el) {
-            return false;
-        }
-
-        return (
-            el.isContentEditable ||
-            ['TEXTAREA', 'SELECT', 'BUTTON'].includes(el.tagName) ||
-            (el.tagName === 'INPUT' && el !== i)
-        );
-    }
-
-    function selectBarcodeValue() {
-        if (!i || !i.value) {
-            return;
-        }
-
-        setTimeout(function () {
-            try {
-                i.setSelectionRange(0, i.value.length);
-            } catch (e) {}
-        }, 0);
-    }
-
-    if (i) {
-        i.className = 'bc-input';
-        i.placeholder = 'امسح الباركود أو اكتب الرمز...';
-        i.setAttribute('inputmode', 'numeric');
-        i.setAttribute('autocomplete', 'off');
-
-        replaceOnNextInput = i.value.trim().length > 0;
-
-        if (!isTouch()) {
-            i.focus();
-            selectBarcodeValue();
-        }
-
-        i.addEventListener('focus', function () {
-            replaceOnNextInput = i.value.trim().length > 0;
-            selectBarcodeValue();
-        });
-
-        i.addEventListener('click', function () {
-            replaceOnNextInput = i.value.trim().length > 0;
-            selectBarcodeValue();
-        });
-
-        i.addEventListener('touchend', function () {
-            replaceOnNextInput = i.value.trim().length > 0;
-            selectBarcodeValue();
-        }, { passive: true });
-
-        i.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') {
-                i.value = '';
-                buf = '';
-                inputBuf = '';
-                replaceOnNextInput = false;
-                return;
-            }
-
-            if (e.ctrlKey || e.altKey || e.metaKey) {
-                return;
-            }
-
-            const now = Date.now();
-
-            if (now - inputLastKey > RESET) {
-                inputBuf = '';
-            }
-
-            inputLastKey = now;
-
-            if (e.key === 'Enter') {
-                const value = inputBuf || i.value;
-
-                if (String(value || '').trim().length >= MIN) {
-                    e.preventDefault();
-                    doSubmit(value);
-                }
-
-                return;
-            }
-
-            if (isBarcodeKey(e)) {
-                if (replaceOnNextInput && i.value.trim().length > 0) {
-                    e.preventDefault();
-                    i.value = e.key;
-                    inputBuf = e.key;
-                    replaceOnNextInput = false;
-                } else {
-                    inputBuf += e.key;
-                }
-
-                clearTimeout(inputTimer);
-
-                inputTimer = setTimeout(function () {
-                    if (inputBuf.length >= MIN) {
-                        doSubmit(inputBuf);
-                    }
-                }, SUBMIT);
-            }
-        });
-    }
-
-    document.fonts.ready.then(function () {
-        const loaded = document.fonts.check('bold 16px SaudiRiyalSymbol');
-
-        if (!loaded) {
-            document.querySelectorAll('.sar-sym').forEach(function (el) {
-                el.textContent = 'ريال';
-                el.style.fontFamily = "'Cairo', sans-serif";
-                el.style.fontSize = '0.42em';
-                el.style.fontWeight = '900';
-                el.style.verticalAlign = '0.22em';
-                el.style.letterSpacing = '0';
-                el.style.marginLeft = '5px';
+        if (form) {
+            form.addEventListener('submit', function() {
+                if (i && String(i.value||'').trim().length >= MIN) showLookupLoading();
             });
         }
-    });
 
-    document.addEventListener('keydown', function (e) {
-        if (!i || !form || e.ctrlKey || e.altKey || e.metaKey) {
-            return;
+        function isTouch() { return window.matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window; }
+        function isBarcodeKey(e) { return e.key.length === 1 && /^[0-9A-Za-z_.-]$/.test(e.key); }
+
+        function doSubmit(val) {
+            const bc = String(val||'').trim();
+            if (!i || !form || bc.length < MIN) return;
+            i.value = bc; buf = ''; inputBuf = ''; replaceOnNextInput = true;
+            showLookupLoading();
+            form.requestSubmit ? form.requestSubmit() : form.submit();
         }
 
-        if (document.activeElement === i || isOther(document.activeElement)) {
-            return;
+        function isOther(el) {
+            return el && (el.isContentEditable || ['TEXTAREA','SELECT','BUTTON'].includes(el.tagName) || (el.tagName==='INPUT' && el!==i));
         }
 
-        const now = Date.now();
-
-        if (now - lastKey > RESET) {
-            buf = '';
+        function selectBarcodeValue() {
+            if (!i || !i.value) return;
+            setTimeout(function() { try { i.setSelectionRange(0, i.value.length); } catch(e){} }, 0);
         }
 
-        lastKey = now;
+        if (i) {
+            i.className = 'bc-input';
+            i.placeholder = 'امسح الباركود أو اكتب الرمز...';
+            i.setAttribute('inputmode','numeric');
+            i.setAttribute('autocomplete','off');
+            replaceOnNextInput = i.value.trim().length > 0;
+            if (!isTouch()) { i.focus(); selectBarcodeValue(); }
+            ['focus','click'].forEach(ev => i.addEventListener(ev, function() { replaceOnNextInput = i.value.trim().length > 0; selectBarcodeValue(); }));
+            i.addEventListener('touchend', function() { replaceOnNextInput = i.value.trim().length > 0; selectBarcodeValue(); }, {passive:true});
+            i.addEventListener('keydown', function(e) {
+                if (e.key==='Escape') { i.value=''; buf=''; inputBuf=''; replaceOnNextInput=false; return; }
+                if (e.ctrlKey||e.altKey||e.metaKey) return;
+                const now = Date.now();
+                if (now-inputLastKey > RESET) inputBuf='';
+                inputLastKey = now;
+                if (e.key==='Enter') { const v=inputBuf||i.value; if(String(v||'').trim().length>=MIN){e.preventDefault();doSubmit(v);} return; }
+                if (isBarcodeKey(e)) {
+                    if (replaceOnNextInput && i.value.trim().length > 0) { e.preventDefault(); i.value=e.key; inputBuf=e.key; replaceOnNextInput=false; }
+                    else inputBuf += e.key;
+                    clearTimeout(inputTimer);
+                    inputTimer = setTimeout(function() { if(inputBuf.length>=MIN) doSubmit(inputBuf); }, SUBMIT);
+                }
+            });
+        }
 
-        if (e.key === 'Enter') {
-            if (buf.length >= MIN) {
-                e.preventDefault();
-                doSubmit(buf);
+        if (document.fonts) {
+            document.fonts.ready.then(function() {
+                if (!document.fonts.check('bold 16px SaudiRiyalSymbol')) {
+                    document.querySelectorAll('.sar-sym').forEach(function(el) {
+                        el.textContent = 'ريال';
+                        Object.assign(el.style, {fontFamily:"'Cairo',sans-serif", fontSize:'0.42em', fontWeight:'900', verticalAlign:'0.22em', letterSpacing:'0', marginLeft:'5px'});
+                    });
+                }
+            });
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (!i||!form||e.ctrlKey||e.altKey||e.metaKey) return;
+            if (document.activeElement===i||isOther(document.activeElement)) return;
+            const now = Date.now();
+            if (now-lastKey > RESET) buf='';
+            lastKey = now;
+            if (e.key==='Enter') { if(buf.length>=MIN){e.preventDefault();doSubmit(buf);} return; }
+            if (isBarcodeKey(e)) {
+                e.preventDefault(); buf+=e.key; i.value=buf;
+                clearTimeout(timer);
+                timer = setTimeout(function() { if(buf.length>=MIN) doSubmit(buf); }, SUBMIT);
+            }
+        });
+    </script>
+
+    <script>
+        (function() {
+            const cameraInput = document.querySelector('input[name="barcode"]');
+            const cameraForm = cameraInput ? cameraInput.closest('form') : null;
+            const openBtn = document.getElementById('cameraScanBtn');
+            const closeBtn = document.getElementById('closeCameraBtn');
+            const sheet = document.getElementById('cameraSheet');
+            const video = document.getElementById('cameraVideo');
+            const status = document.getElementById('cameraStatus');
+            let controls = null, stream = null, submitted = false;
+
+            function setStatus(msg) { if (status) status.textContent = msg; }
+
+            function submitCameraBarcode(value) {
+                const barcode = String(value||'').trim().replace(/\s+/g,'');
+                if (!barcode || submitted || !cameraInput || !cameraForm) return;
+                submitted = true;
+                cameraInput.value = barcode;
+                stopCamera();
+                if (typeof showLookupLoading === 'function') showLookupLoading();
+                cameraForm.requestSubmit ? cameraForm.requestSubmit() : cameraForm.submit();
             }
 
-            return;
-        }
+            function stopCamera() {
+                if (controls && typeof controls.stop === 'function') controls.stop();
+                controls = null;
+                if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+                if (video) { if (video.srcObject) video.srcObject.getTracks().forEach(t => t.stop()); video.pause(); video.srcObject = null; video.load(); }
+                if (sheet) sheet.hidden = true;
+            }
 
-        if (isBarcodeKey(e)) {
-            e.preventDefault();
+            async function startCamera() {
+                if (!sheet || !video) return;
+                submitted = false;
+                sheet.hidden = false;
+                setStatus('جاري تشغيل الكاميرا...');
+                video.setAttribute('playsinline','true');
+                video.setAttribute('webkit-playsinline','true');
+                video.muted = true;
 
-            buf += e.key;
-            i.value = buf;
-
-            clearTimeout(timer);
-
-            timer = setTimeout(function () {
-                if (buf.length >= MIN) {
-                    doSubmit(buf);
+                if (!window.isSecureContext) {
+                    setStatus('الكاميرا تحتاج HTTPS. راجع إعدادات السيرفر.');
+                    return;
                 }
-            }, SUBMIT);
-        }
-    });
-</script>
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    setStatus('المتصفح لا يدعم الكاميرا.');
+                    return;
+                }
+
+                try {
+                    if (!window.ZXingBrowser) throw new Error('ZXing not loaded');
+                    const ReaderClass = ZXingBrowser.BrowserMultiFormatOneDReader || ZXingBrowser.BrowserMultiFormatReader;
+                    const reader = new ReaderClass();
+                    controls = await reader.decodeFromConstraints(
+                        { audio: false, video: { facingMode: {ideal:'environment'}, width:{ideal:1280}, height:{ideal:720} } },
+                        video,
+                        function(result) { if (result) submitCameraBarcode(typeof result.getText==='function' ? result.getText() : result.text); }
+                    );
+                    if (video && video.srcObject) stream = video.srcObject;
+                    setStatus('وجّه الكاميرا نحو الباركود');
+                } catch(err) {
+                    if (err.name==='NotAllowedError') setStatus('لم يتم السماح بالكاميرا — اضغط سماح ثم حاول.');
+                    else if (err.name==='NotFoundError') setStatus('لا توجد كاميرا على هذا الجهاز.');
+                    else setStatus('تعذر تشغيل الكاميرا: ' + err.message);
+                }
+            }
+
+            if (openBtn) openBtn.addEventListener('click', startCamera);
+            if (closeBtn) closeBtn.addEventListener('click', stopCamera);
+            if (sheet) sheet.addEventListener('click', e => { if(e.target===sheet) stopCamera(); });
+            window.addEventListener('pagehide', stopCamera);
+        })();
+    </script>
 </body>
 </html>
