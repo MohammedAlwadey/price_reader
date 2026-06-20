@@ -1,5 +1,8 @@
 from django.conf import settings
 from django.db import models
+from django.contrib.sessions.models import Session
+from django.utils import timezone
+
 
 class OracleSettings(models.Model):
     company_name = models.CharField(max_length=150, default="قارى الأسعار")
@@ -99,3 +102,18 @@ def user_allows_multiple_sessions(user):
         return user.login_policy.allow_multiple_sessions
     except UserLoginPolicy.DoesNotExist:
         return False
+    
+def cleanup_expired_active_sessions():
+    valid_session_keys = set(
+        Session.objects.filter(expire_date__gte=timezone.now())
+        .values_list("session_key", flat=True)
+    )
+
+    ActiveUserSession.objects.exclude(
+        session_key__in=valid_session_keys
+    ).delete()
+
+
+def get_active_users_count():
+    cleanup_expired_active_sessions()
+    return ActiveUserSession.objects.exclude(session_key__isnull=True).count()
