@@ -58,7 +58,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    "sslserver",
     "pricing.apps.PricingConfig",
 
 ]
@@ -69,8 +68,8 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "pricing.session_middleware.SingleSessionMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "pricing.session_middleware.SingleSessionMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 

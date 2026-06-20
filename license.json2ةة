@@ -1,0 +1,11 @@
+{
+  "payload": {
+    "customer": "Client Test",
+    "server_id": "3092cd5be1ca61927c361dd112b0afdef03aeeba2dd3518118acea04f7f25d75",
+    "expires": "2027-12-31",
+    "max_users": 5,
+    "max_active_sessions": 2,
+    "edition": "Professional"
+  },
+  "signature": "Y0y21hfS4UcVJtIIzv0SZMnCcvYd1ZdmTAxXvUvqiYpZt/4PJTo0wb9aDEp6dp3MQ1qM98wH/iWD2MAA1iPVF8z1PS1sRLj3zQfck+zro0uao4wJSh1tAq6z/v9DdR9svpcJCcQaba2SEQkua9Quuv3Yf6/eqSj6+tXUfZ5e7B0qgKRNr7UVuHQy8gOFdXYfbUmT4s9khwzCnMJQR2ceI097Kbuk7alTNSsrake5aeyIo5p3lzavdvSwzz28g75C9x1zgIDBy++tysy6StR+g+3Q8NLOMmhGEhv9siv4O6z38q4hU50AcxIYTRj4N+hb1btKssVUw/ZISs/fpuPBdA=="
+}
