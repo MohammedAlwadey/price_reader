@@ -22,3 +22,9 @@ Thumbs.db
 *.zip
 *.rar
 *.bak
+
+
+build/
+dist/
+license.json
+license_keys/private_key.pem
