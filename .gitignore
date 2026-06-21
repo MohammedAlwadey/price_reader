@@ -24,10 +24,13 @@ Thumbs.db
 # Licensing
 license.json
 license_keys/private_key.pem
+*license.json
+
 
 # Build
 build/
 dist/
+installer_output/
 
 
 # Python
