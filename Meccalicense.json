@@ -1,0 +1,11 @@
+{
+  "payload": {
+    "customer": "Mecca",
+    "server_id": "87a5cc4c96abc296c5604e1f19b2108fc4137e25f23c8570be67a3f16c743b44",
+    "expires": "2027-12-31",
+    "max_users": 5,
+    "max_active_sessions": 5,
+    "edition": "Professional"
+  },
+  "signature": "FRAPgeFiXza0Gg0kMxkZumjtUs8At6zAoDrnZr1/o0GkE3JqohsEGRlw/T1TfAnHOD1tkXtZ7ZMnWwAlV6J2TMBg2dPhrfRoINVe3+oYfY4hjr2ri0gGA7TEkFdRLBvPLQkCja20b87/8rEtCmdjRb6fvYUL4zsvWBk+dJ+BnSoKeT2l6xb/sIg2YpIK7AIYxz7Rcvy2XFo5dEJtXcNAeRas//FLHaa5Xx3W1yuhCgiTm/Cj2rMZWADNBqE+ZUsndHly5POQnVe3bqhaxsbxo2Zj7o51lWQqLhAGxSYsgkBskogEwMIV3hRT1H+Z5k3Kmy8r/awUY6HCu6DNVvsaBg=="
+}
