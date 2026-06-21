@@ -18,7 +18,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Quick-start development settings - unsuitable for production
@@ -43,6 +42,17 @@ CSRF_TRUSTED_ORIGINS = [
     for origin in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",")
     if origin.strip()
 ]
+print("CSRF_TRUSTED_ORIGINS =", CSRF_TRUSTED_ORIGINS)
+print("DJANGO_CSRF_TRUSTED_ORIGINS RAW =", os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS"))
+
+
+print("=" * 80)
+print("BASE_DIR =", BASE_DIR)
+print("ENV FILE =", BASE_DIR / ".env")
+print("DJANGO_ALLOWED_HOSTS RAW =", os.getenv("DJANGO_ALLOWED_HOSTS"))
+print("=" * 80)
+print("ALLOWED_HOSTS =", ALLOWED_HOSTS)
+
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
